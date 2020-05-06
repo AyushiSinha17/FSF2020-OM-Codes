@@ -21,11 +21,30 @@ package SurfaceTension
               Real R[Nc];
       equation
               for i in 1:Nc loop
-                  
-                      R[i] = SurfaceTension.SurfTens(T, C[i].Sigma);
+                      if T > C[i].SigmaT[1] and T < C[i].SigmaT[2] then
+                              R[i] = SurfaceTension.SurfTens(T, C[i].Sigma);
+                      else
+                              R[i] = SurfaceTension.SurfTensEmp(P, T, C[i].Pc / 100000, C[i].Tc, C[i].Tb) / 1000;
+                      end if;
               end for;
               ST = sum(x[:] .* R[:]);
       end Test;
   
   
+
+  function SurfTensEmp
+    extends Modelica.Icons.Function;
+    import Simulator.Files.Thermodynamic_Functions.*;
+    input Real P, T;
+    input Real Pc, Tc, Tb;
+    output Real sigma;
+  protected
+    Real Tr, Tbr;
+    Real alpha;
+  algorithm
+    Tr := T / Tc;
+    Tbr := Tb / Tc;
+    alpha := 0.9076 * (1 + Tbr * log(Pc / 1.01325) / (1 - Tbr));
+    sigma := Pc ^ (2 / 3) * Tc ^ (1 / 3) * (0.132 * alpha - 0.279) * (1 - Tr) ^ (11 / 9);
+  end SurfTensEmp;
 end SurfaceTension;
